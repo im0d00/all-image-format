@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.UI;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -116,6 +117,19 @@ public sealed partial class MainWindow : Window
     {
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBar);
+
+        // Apply Mica backdrop on Windows 11 for a native Windows 11 look.
+        // MicaController.IsSupported() returns false on Windows 10, so the
+        // existing solid ApplicationPageBackgroundThemeBrush is preserved there.
+        if (MicaController.IsSupported())
+        {
+            SystemBackdrop = new MicaBackdrop();
+            // Make the root grid transparent so Mica shows through the window.
+            RootGrid.Background = null;
+            // The title bar uses a semi-transparent LayerFillColorDefaultBrush
+            // which lets Mica bleed through naturally on Windows 11.
+            TitleBar.Background = null;
+        }
 
         var appWindow = GetAppWindow();
         if (appWindow?.TitleBar is { } tb)
