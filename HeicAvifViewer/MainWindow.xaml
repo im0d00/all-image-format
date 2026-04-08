@@ -1,0 +1,323 @@
+<Window
+    x:Class="HeicAvifViewer.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HeicAvifViewer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="HEIC / AVIF Image Viewer">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <!-- Title bar -->
+            <RowDefinition Height="48"/>
+            <!-- Main content area -->
+            <RowDefinition Height="*"/>
+            <!-- Thumbnail strip -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             CUSTOM TITLE BAR
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0"
+              x:Name="TitleBar"
+              Background="{ThemeResource LayerFillColorDefaultBrush}"
+              BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+              BorderThickness="0,0,0,1">
+            <Grid.ColumnDefinitions>
+                <!-- Drag area left of buttons -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- App icon + title -->
+                <ColumnDefinition Width="*"/>
+                <!-- Toolbar buttons -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- System caption buttons reserved area -->
+                <ColumnDefinition x:Name="CaptionColumnDef" Width="138"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- App icon placeholder -->
+            <TextBlock Grid.Column="0"
+                       Text="&#xEB9F;"
+                       FontFamily="{StaticResource SymbolThemeFontFamily}"
+                       FontSize="20"
+                       VerticalAlignment="Center"
+                       Margin="12,0,8,0"
+                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+
+            <!-- App title  -->
+            <TextBlock Grid.Column="1"
+                       x:Name="AppTitleText"
+                       Text="HEIC / AVIF Image Viewer"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+
+            <!-- ── Toolbar ──────────────────────────────────────────────── -->
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        Spacing="4"
+                        Margin="0,0,8,0">
+
+                <!-- Open File -->
+                <Button x:Name="OpenFileButton"
+                        Click="OpenFileButton_Click"
+                        ToolTipService.ToolTip="Open image file (Ctrl+O)"
+                        Style="{StaticResource SmallButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="&#xE8E5;"
+                                   FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                   FontSize="14"/>
+                        <TextBlock Text="Open" FontSize="12"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Open Folder -->
+                <Button x:Name="OpenFolderButton"
+                        Click="OpenFolderButton_Click"
+                        ToolTipService.ToolTip="Open folder (Ctrl+Shift+O)"
+                        Style="{StaticResource SmallButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="&#xED25;"
+                                   FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                   FontSize="14"/>
+                        <TextBlock Text="Folder" FontSize="12"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Separator -->
+                <Rectangle Width="1" Height="20"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}"
+                           VerticalAlignment="Center"
+                           Margin="4,0"/>
+
+                <!-- Zoom in -->
+                <Button x:Name="ZoomInButton"
+                        Click="ZoomInButton_Click"
+                        ToolTipService.ToolTip="Zoom in (+)"
+                        Style="{StaticResource SmallButtonStyle}"
+                        Content="&#xE8A3;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="14"/>
+
+                <!-- Zoom out -->
+                <Button x:Name="ZoomOutButton"
+                        Click="ZoomOutButton_Click"
+                        ToolTipService.ToolTip="Zoom out (-)"
+                        Style="{StaticResource SmallButtonStyle}"
+                        Content="&#xE71F;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="14"/>
+
+                <!-- Fit to window -->
+                <Button x:Name="FitButton"
+                        Click="FitButton_Click"
+                        ToolTipService.ToolTip="Fit to window (F)"
+                        Style="{StaticResource SmallButtonStyle}"
+                        Content="&#xE9A6;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="14"/>
+
+                <!-- Separator -->
+                <Rectangle Width="1" Height="20"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}"
+                           VerticalAlignment="Center"
+                           Margin="4,0"/>
+
+                <!-- EXIF metadata panel toggle -->
+                <ToggleButton x:Name="MetadataPanelToggle"
+                              Checked="MetadataPanelToggle_Checked"
+                              Unchecked="MetadataPanelToggle_Unchecked"
+                              ToolTipService.ToolTip="Show/hide EXIF metadata (M)"
+                              Style="{StaticResource SmallToggleButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="&#xE946;"
+                                   FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                   FontSize="14"/>
+                        <TextBlock Text="EXIF" FontSize="12"/>
+                    </StackPanel>
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             MAIN CONTENT  (image + optional metadata panel)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- Metadata panel — collapsed by default -->
+                <ColumnDefinition x:Name="MetadataColumnDef" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ── Image area ───────────────────────────────────────────── -->
+            <Grid Grid.Column="0">
+
+                <!-- Drop hint shown when no image is loaded -->
+                <StackPanel x:Name="DropHint"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="12">
+                    <TextBlock Text="&#xEB9F;"
+                               FontFamily="{StaticResource SymbolThemeFontFamily}"
+                               FontSize="64"
+                               HorizontalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorDisabledBrush}"/>
+                    <TextBlock Text="Drop a .heic, .avif or .webp file here"
+                               Style="{StaticResource SubtitleTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="or use the Open button above"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Scrollable / zoomable image area -->
+                <ScrollViewer x:Name="ImageScrollViewer"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              ZoomMode="Enabled"
+                              MinZoomFactor="0.05"
+                              MaxZoomFactor="32"
+                              Visibility="Collapsed"
+                              AllowDrop="True"
+                              DragOver="ImageArea_DragOver"
+                              Drop="ImageArea_Drop">
+                    <Image x:Name="MainImage"
+                           Stretch="None"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                </ScrollViewer>
+
+                <!-- Loading overlay -->
+                <Grid x:Name="LoadingOverlay"
+                      Visibility="Collapsed"
+                      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                    <StackPanel HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Spacing="12">
+                        <ProgressRing x:Name="MainProgressRing"
+                                      IsActive="True"
+                                      Width="48" Height="48"/>
+                        <TextBlock x:Name="LoadingText"
+                                   Text="Loading…"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Prev / Next navigation buttons -->
+                <Button x:Name="PrevButton"
+                        Click="PrevButton_Click"
+                        ToolTipService.ToolTip="Previous image (Left arrow)"
+                        Style="{StaticResource SmallButtonStyle}"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Margin="12,0"
+                        Visibility="Collapsed"
+                        Content="&#xE76B;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="20"
+                        Opacity="0.9"/>
+
+                <Button x:Name="NextButton"
+                        Click="NextButton_Click"
+                        ToolTipService.ToolTip="Next image (Right arrow)"
+                        Style="{StaticResource SmallButtonStyle}"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Margin="12,0"
+                        Visibility="Collapsed"
+                        Content="&#xE76C;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="20"
+                        Opacity="0.9"/>
+
+                <!-- Status bar (bottom of image area) -->
+                <StackPanel x:Name="StatusBar"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,0,8"
+                            Spacing="16"
+                            Visibility="Collapsed">
+                    <TextBlock x:Name="FilenameText"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               FontSize="12"/>
+                    <TextBlock x:Name="DimensionsText"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               FontSize="12"/>
+                    <TextBlock x:Name="IndexText"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                               FontSize="12"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── EXIF metadata slide-out panel ────────────────────────── -->
+            <Border Grid.Column="1"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1,0,0,0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <local:ExifMetadataPanel x:Name="MetadataPanel"
+                                         IsOpen="False"
+                                         CloseRequested="MetadataPanel_CloseRequested"/>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             THUMBNAIL STRIP  (lazy-loaded)
+             ═══════════════════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="2"
+              x:Name="ThumbnailStrip"
+              Background="{ThemeResource LayerFillColorDefaultBrush}"
+              BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+              BorderThickness="0,1,0,0"
+              Visibility="Collapsed"
+              Height="128">
+
+            <!-- Loading indicator for large folders -->
+            <ProgressBar x:Name="ThumbnailProgress"
+                         IsIndeterminate="True"
+                         VerticalAlignment="Top"
+                         Height="3"
+                         Visibility="Collapsed"/>
+
+            <ListView x:Name="ThumbnailList"
+                      Orientation="Horizontal"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                      SelectionMode="Single"
+                      SelectionChanged="ThumbnailList_SelectionChanged">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:ThumbnailItem">
+                        <Grid Width="104" Height="104" Margin="4">
+                            <!-- Placeholder shown while thumbnail loads -->
+                            <TextBlock Text="&#xEB9F;"
+                                       FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                       FontSize="32"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorDisabledBrush}"
+                                       Visibility="{x:Bind IsLoading, Mode=OneWay,
+                                           Converter={StaticResource BoolToVisibilityConverter}}"/>
+                            <Image Source="{x:Bind Thumbnail, Mode=OneWay}"
+                                   Stretch="UniformToFill"
+                                   Width="104" Height="104"/>
+                            <ProgressRing IsActive="{x:Bind IsLoading, Mode=OneWay}"
+                                          Width="20" Height="20"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </Grid>
+</Window>

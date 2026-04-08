@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>HeicAvifViewer</RootNamespace>
+    <AssemblyName>HeicAvifViewer</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>MSIX</WindowsPackageType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Windows App SDK (WinUI 3) -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240802000" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+
+    <!-- Magick.NET for HEIC/AVIF/WebP decoding without OS codec dependencies -->
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.1.0" />
+
+    <!-- CommunityToolkit for MVVM patterns and lazy-load helpers -->
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

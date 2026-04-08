@@ -1,0 +1,27 @@
+# .NET build artifacts
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# NuGet
+packages/
+*.nupkg
+
+# Windows packaging
+AppPackages/
+BundleArtifacts/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+
+# Rider / Resharper
+.idea/
+*.DotSettings.user
+
+# Visual Studio cache
+.vsconfig
+*.db
+*.opendb
